@@ -1,0 +1,16 @@
+Django>=5.0,<5.1
+djangorestframework
+django-cors-headers
+django-environ
+psycopg2-binary
+celery
+redis
+whitenoise
+gunicorn
+Pillow
+django-filter
+drf-spectacular
+python-dateutil
+twilio
+django-cleanup
+reportlab

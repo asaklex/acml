@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import Modal from '../components/Modal';
 import { useAuthStore } from '../stores/auth';
-import { Shield, ShieldAlert } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
 interface Member {
   id: string;
@@ -30,6 +30,7 @@ interface MemberFormData {
   membership_type?: string;
   password: string;
   is_staff: boolean;
+  date_joined: string;
 }
 
 const MembersPage = () => {
@@ -52,7 +53,8 @@ const MembersPage = () => {
     status: 'PENDING',
     membership_type: 'MONTHLY',
     password: '',
-    is_staff: false
+    is_staff: false,
+    date_joined: ''
   });
 
   useEffect(() => {
@@ -82,7 +84,8 @@ const MembersPage = () => {
       status: 'PENDING',
       membership_type: 'MONTHLY',
       password: '',
-      is_staff: false
+      is_staff: false,
+      date_joined: new Date().toISOString()
     });
     setShowModal(true);
   };
@@ -99,7 +102,8 @@ const MembersPage = () => {
       status: member.status,
       membership_type: member.membership_type || 'MONTHLY',
       password: '',
-      is_staff: member.is_staff || false
+      is_staff: member.is_staff || false,
+      date_joined: member.date_joined || new Date().toISOString()
     });
     setShowModal(true);
   };
@@ -152,6 +156,19 @@ const MembersPage = () => {
       'PENDING': 'En attente'
     };
     return labels[status] || status;
+  };
+
+  // Helper to format date for input type="datetime-local"
+  const formatDateForInput = (isoString: string) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    // Adjust to local time zone logic if needed, or just slice. 
+    // Simplest approach for ISO string from backend (which is usually UTC) to datetime-local:
+    // This is tricky with timezones. simplest is just substring if we accept UTC or local.
+    // Let's try to keep it simple: new Date(isoString).toISOString().slice(0, 16) gives UTC.
+    // For local input, we want local time.
+    const pad = (n: number) => n < 10 ? '0' + n : n;
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   };
 
   if (loading) return <div className="loading">Chargement...</div>;
@@ -221,7 +238,9 @@ const MembersPage = () => {
                     </span>
                   </td>
                   <td>{member.membership_type || '-'}</td>
-                  <td>{new Date(member.date_joined).toLocaleDateString('fr-CA')}</td>
+                  <td>
+                    {member.date_joined ? new Date(member.date_joined).toLocaleDateString('fr-CA') : '-'}
+                  </td>
                   <td>
                     <div className="action-buttons">
                       <button className="btn btn-sm" onClick={() => handleEdit(member)}>Modifier</button>
@@ -343,6 +362,15 @@ const MembersPage = () => {
                 <option value="ANNUAL">Annuel</option>
               </select>
             </div>
+          </div>
+          
+          <div className="form-group">
+            <label>Date d'adhésion</label>
+            <input
+              type="datetime-local"
+              value={formatDateForInput(formData.date_joined)}
+              onChange={(e) => setFormData({ ...formData, date_joined: new Date(e.target.value).toISOString() })}
+            />
           </div>
 
           {isAdmin && (

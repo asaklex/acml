@@ -5,6 +5,8 @@ import {
   CreditCard, BookOpen, Package, LogOut
 } from 'lucide-react';
 
+import logo from '../assets/logo.png';
+
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
@@ -29,7 +31,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     <div className="flex min-h-screen">
       {/* Sidebar */}
       <aside className="w-64 bg-primary text-white p-6 flex flex-col">
-        <div className="text-2xl font-bold mb-8">ACML Platform</div>
+        <div className="mb-8 flex justify-center">
+             <img src={logo} alt="ACML Logo" className="h-24 w-auto object-contain bg-white rounded-lg p-2" />
+        </div>
 
         <nav className="flex-1">
           {navItems.map((item) => (

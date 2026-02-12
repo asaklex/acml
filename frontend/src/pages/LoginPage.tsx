@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import { useAuthStore } from '../stores/auth';
 
+import logo from '../assets/logo.png';
+
 const LoginPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -31,7 +33,10 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="card">
+        <div className="card text-center">
+          <div className="flex justify-center mb-6">
+            <img src={logo} alt="ACML Logo" className="h-32 w-auto object-contain" />
+          </div>
           <h2 className="text-2xl font-bold text-center mb-6">Connexion ACML</h2>
 
           {error && (

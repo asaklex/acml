@@ -6,6 +6,9 @@ import AnnouncementsPage from './pages/AnnouncementsPage';
 import MembersPage from './pages/MembersPage';
 import MemberDetailsPage from './pages/MemberDetailsPage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
+import RegisterPage from './pages/RegisterPage';
+import PendingApprovalPage from './pages/PendingApprovalPage';
+import ApprovalsPage from './pages/ApprovalsPage';
 import EventsPage from './pages/EventsPage';
 import FinancePage from './pages/FinancePage';
 import EducationPage from './pages/EducationPage';
@@ -114,6 +117,11 @@ const PrivateRoute = ({ children, skipLayout = false }: { children: React.ReactN
     return <Navigate to="/change-password" />;
   }
 
+  // Force pending approval view if status is PENDING
+  if (user?.status === 'PENDING' && location.pathname !== '/pending-approval') {
+    return <Navigate to="/pending-approval" />;
+  }
+
   return skipLayout ? <>{children}</> : <Layout>{children}</Layout>;
 };
 
@@ -122,6 +130,12 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/pending-approval" element={
+          <PrivateRoute skipLayout>
+            <PendingApprovalPage />
+          </PrivateRoute>
+        } />
         <Route path="/change-password" element={
           <PrivateRoute skipLayout>
             <ChangePasswordPage />
@@ -130,6 +144,7 @@ function App() {
 
         <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
         <Route path="/announcements" element={<PrivateRoute><AnnouncementsPage /></PrivateRoute>} />
+        <Route path="/approvals" element={<PrivateRoute><ApprovalsPage /></PrivateRoute>} />
         <Route path="/members" element={<PrivateRoute><MembersPage /></PrivateRoute>} />
         <Route path="/members/:id" element={<PrivateRoute><MemberDetailsPage /></PrivateRoute>} />
         <Route path="/events" element={<PrivateRoute><EventsPage /></PrivateRoute>} />

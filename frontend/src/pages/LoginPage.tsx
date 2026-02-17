@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/client';
 import { useAuthStore } from '../stores/auth';
 
@@ -24,7 +24,9 @@ const LoginPage = () => {
       const { token, user } = response.data;
       setAuth(token, user);
       
-      if (user.must_change_password) {
+      if (user.status === 'PENDING') {
+        navigate('/pending-approval');
+      } else if (user.must_change_password) {
         navigate('/change-password');
       } else {
         navigate('/');
@@ -83,8 +85,10 @@ const LoginPage = () => {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-text-muted">
-            <p>Bienvenue sur la plateforme ACML</p>
+          <div className="mt-8 pt-6 border-t border-border">
+            <p className="text-text-muted text-sm">
+              Pas encore membre ? <Link to="/register" className="text-primary font-medium hover:underline">Créer un compte</Link>
+            </p>
           </div>
         </div>
       </div>

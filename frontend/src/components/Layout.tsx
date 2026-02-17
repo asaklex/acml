@@ -2,7 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth';
 import {
   Home, Users, Calendar, Megaphone,
-  CreditCard, BookOpen, Package, LogOut
+  CreditCard, BookOpen, Package, LogOut, Shield
 } from 'lucide-react';
 
 import logo from '../assets/logo.png';
@@ -26,6 +26,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { label: 'Cours', path: '/education', icon: <BookOpen size={20} /> },
     { label: 'Ressources', path: '/resources', icon: <Package size={20} /> },
   ];
+
+  if (user?.is_staff) {
+    navItems.splice(3, 0, { label: 'Approbations', path: '/approvals', icon: <Shield size={20} /> });
+  }
 
   return (
     <div className="flex min-h-screen">

@@ -21,11 +21,22 @@ class MemberContributionInline(admin.TabularInline):
 
 @admin.register(Member)
 class MemberAdmin(UserAdmin):
-    list_display = ('username', 'email', 'first_name', 'last_name', 'status', 'is_staff')
-    list_filter = ('status', 'gender', 'membership_type', 'is_staff', 'is_superuser')
-    fieldsets = UserAdmin.fieldsets + (
-        ('Informations ACML', {'fields': ('phone', 'gender', 'status', 'membership_type')}),
+    list_display = ('username', 'email', 'phone', 'first_name', 'last_name', 'status', 'is_staff')
+    list_filter = ('status', 'sex', 'is_staff', 'is_superuser')
+    ordering = ('username',)
+    readonly_fields = ('username',)
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        ('Informations personnelles', {'fields': ('first_name', 'last_name', 'email', 'phone', 'sex', 'postal_code', 'status', 'must_change_password')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Conformité Loi 25', {'fields': ('consent_timestamp', 'consent_version', 'data_retention_date')}),
+        ('Dates importantes', {'fields': ('last_login', 'date_joined')}),
+    )
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'first_name', 'last_name', 'phone', 'sex', 'postal_code', 'password'),
+        }),
     )
     inlines = [MemberFamilyInline, MemberSkillInline, MemberContributionInline]
 

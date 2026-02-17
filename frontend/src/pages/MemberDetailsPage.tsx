@@ -8,14 +8,13 @@ import { ArrowLeft, User, Users, Award, CreditCard, Clock, Trash2, Plus } from '
 
 interface Member {
   id: string;
-  username: string;
   email: string;
   first_name: string;
   last_name: string;
   phone?: string;
   status: string;
-  gender?: string;
-  membership_type?: string;
+  sex?: string;
+  postal_code: string;
   date_joined: string;
   families: any[];
   skills: any[];
@@ -155,6 +154,15 @@ const MemberDetailsPage = () => {
     'PARENT': 'Parent'
   };
 
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      'ACTIVE': 'Actif',
+      'INACTIVE': 'Inactif',
+      'PENDING': 'En attente'
+    };
+    return labels[status] || status;
+  };
+
   return (
     <div className="page-container">
       <div className="mb-6">
@@ -171,7 +179,7 @@ const MemberDetailsPage = () => {
           </div>
           <div>
             <h1 className="text-3xl font-bold m-0">{member.first_name} {member.last_name}</h1>
-            <p className="text-text-muted">{member.email} • <span className={`status-badge status-${member.status.toLowerCase()}`}>{member.status}</span></p>
+            <p className="text-text-muted">{member.email || member.phone || 'N/A'} • <span className={`status-badge status-${member.status.toLowerCase()}`}>{getStatusLabel(member.status)}</span></p>
           </div>
         </div>
       </div>
@@ -201,24 +209,24 @@ const MemberDetailsPage = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm text-text-muted">Courriel</label>
-                  <p>{member.email}</p>
+                  <p>{member.email || '-'}</p>
                 </div>
                 <div>
                   <label className="block text-sm text-text-muted">Téléphone</label>
                   <p>{member.phone || '-'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm text-text-muted">Genre</label>
-                  <p>{member.gender === 'M' ? 'Homme' : member.gender === 'F' ? 'Femme' : '-'}</p>
+                  <label className="block text-sm text-text-muted">Sexe</label>
+                  <p>{member.sex === 'M' ? 'Homme' : member.sex === 'F' ? 'Femme' : '-'}</p>
                 </div>
               </div>
             </div>
             <div>
-              <h3 className="text-lg font-semibold mb-4 border-b pb-2">Adhésion</h3>
+              <h3 className="text-lg font-semibold mb-4 border-b pb-2">Infos Système</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-text-muted">Type</label>
-                  <p>{member.membership_type || '-'}</p>
+                  <label className="block text-sm text-text-muted">Code Postal</label>
+                  <p>{member.postal_code || '-'}</p>
                 </div>
                 <div>
                   <label className="block text-sm text-text-muted">Statut</label>

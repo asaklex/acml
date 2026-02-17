@@ -1,10 +1,11 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from './stores/auth';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
 import MembersPage from './pages/MembersPage';
 import MemberDetailsPage from './pages/MemberDetailsPage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
 import EventsPage from './pages/EventsPage';
 import FinancePage from './pages/FinancePage';
 import EducationPage from './pages/EducationPage';
@@ -102,9 +103,18 @@ const Home = () => {
   );
 };
 
-const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const token = useAuthStore((state) => state.token);
-  return token ? <Layout>{children}</Layout> : <Navigate to="/login" />;
+const PrivateRoute = ({ children, skipLayout = false }: { children: React.ReactNode, skipLayout?: boolean }) => {
+  const { token, user } = useAuthStore();
+  const location = useLocation();
+
+  if (!token) return <Navigate to="/login" />;
+  
+  // Force password change if required, unless already on the change-password page
+  if (user?.must_change_password && location.pathname !== '/change-password') {
+    return <Navigate to="/change-password" />;
+  }
+
+  return skipLayout ? <>{children}</> : <Layout>{children}</Layout>;
 };
 
 function App() {
@@ -112,6 +122,11 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/change-password" element={
+          <PrivateRoute skipLayout>
+            <ChangePasswordPage />
+          </PrivateRoute>
+        } />
 
         <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
         <Route path="/announcements" element={<PrivateRoute><AnnouncementsPage /></PrivateRoute>} />

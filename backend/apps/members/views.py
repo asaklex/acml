@@ -1,4 +1,6 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from .models import Member, MemberFamily, MemberSkill, MemberContribution, MemberCard
 from .serializers import (
     MemberSerializer, MemberFamilySerializer, MemberSkillSerializer,
@@ -11,7 +13,19 @@ class MemberViewSet(viewsets.ModelViewSet):
     serializer_class = MemberSerializer
     permission_classes = [permissions.IsAuthenticated]
     search_fields = ['first_name', 'last_name', 'email', 'phone']
-    filterset_fields = ['status', 'gender', 'membership_type']
+    filterset_fields = ['status', 'sex', 'postal_code']
+
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def change_password(self, request):
+        user = request.user
+        new_password = request.data.get('password')
+        if not new_password:
+            return Response({'detail': 'Le mot de passe est requis.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user.set_password(new_password)
+        user.must_change_password = False
+        user.save()
+        return Response({'detail': 'Mot de passe mis à jour avec succès.'})
 
 
 class MemberFamilyViewSet(viewsets.ModelViewSet):

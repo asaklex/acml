@@ -6,7 +6,7 @@ import { useAuthStore } from '../stores/auth';
 import logo from '../assets/logo.png';
 
 const LoginPage = () => {
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,10 +19,16 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const response = await api.post('/token-auth/', { username, password });
+      // Identifier can be either email or phone
+      const response = await api.post('/token-auth/', { username: identifier, password });
       const { token, user } = response.data;
       setAuth(token, user);
-      navigate('/');
+      
+      if (user.must_change_password) {
+        navigate('/change-password');
+      } else {
+        navigate('/');
+      }
     } catch (err: any) {
       setError(err.response?.data?.non_field_errors?.[0] || 'Identifiants invalides.');
     } finally {
@@ -46,13 +52,13 @@ const LoginPage = () => {
           )}
 
           <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label className="block mb-2 font-medium text-sm">Nom d'utilisateur</label>
+            <div className="mb-4 text-left">
+              <label className="block mb-2 font-medium text-sm">Courriel ou Téléphone</label>
               <input
                 type="text"
                 className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light/20 focus:border-primary-light"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 required
               />
             </div>

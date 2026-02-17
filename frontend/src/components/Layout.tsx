@@ -56,7 +56,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <div className="mb-4 text-sm text-white/70">
             Connecté en tant que:
             <br />
-            <strong className="text-white">{user?.username || 'Utilisateur'}</strong>
+            <strong className="text-white">{user?.email || user?.phone || 'Utilisateur'}</strong>
           </div>
           <button
             onClick={handleLogout}

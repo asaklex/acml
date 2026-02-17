@@ -128,6 +128,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Custom User Model
 AUTH_USER_MODEL = 'members.Member'
 
+AUTHENTICATION_BACKENDS = [
+    'apps.members.auth_backends.EmailOrPhoneBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 # DRF Settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

@@ -7,28 +7,26 @@ import { Shield } from 'lucide-react';
 
 interface Member {
   id: string;
-  username: string;
   email: string;
   first_name: string;
   last_name: string;
   phone?: string;
   status: string;
-  membership_type?: string;
-  gender?: string;
+  sex?: string;
+  postal_code: string;
   date_joined: string;
   is_staff: boolean;
 }
 
 interface MemberFormData {
-  username: string;
   email: string;
   first_name: string;
   last_name: string;
   phone?: string;
-  gender: string;
+  sex: string;
   status: string;
-  membership_type?: string;
-  password: string;
+  postal_code: string;
+  password?: string;
   is_staff: boolean;
   date_joined: string;
 }
@@ -44,17 +42,16 @@ const MembersPage = () => {
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState<MemberFormData>({
-    username: '',
     email: '',
     first_name: '',
     last_name: '',
     phone: '',
-    gender: 'M',
-    status: 'PENDING',
-    membership_type: 'MONTHLY',
+    sex: 'M',
+    status: 'ACTIVE',
+    postal_code: '',
     password: '',
     is_staff: false,
-    date_joined: ''
+    date_joined: new Date().toISOString()
   });
 
   useEffect(() => {
@@ -75,14 +72,13 @@ const MembersPage = () => {
   const handleCreate = () => {
     setEditingMember(null);
     setFormData({
-      username: '',
       email: '',
       first_name: '',
       last_name: '',
       phone: '',
-      gender: 'M',
-      status: 'PENDING',
-      membership_type: 'MONTHLY',
+      sex: 'M',
+      status: 'ACTIVE',
+      postal_code: '',
       password: '',
       is_staff: false,
       date_joined: new Date().toISOString()
@@ -93,14 +89,13 @@ const MembersPage = () => {
   const handleEdit = (member: Member) => {
     setEditingMember(member);
     setFormData({
-      username: member.username,
-      email: member.email,
+      email: member.email || '',
       first_name: member.first_name,
       last_name: member.last_name,
       phone: member.phone || '',
-      gender: member.gender || 'M',
+      sex: member.sex || 'M',
       status: member.status,
-      membership_type: member.membership_type || 'MONTHLY',
+      postal_code: member.postal_code || '',
       password: '',
       is_staff: member.is_staff || false,
       date_joined: member.date_joined || new Date().toISOString()
@@ -121,23 +116,51 @@ const MembersPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Normalize phone number (digits only)
+    const normalizedPhone = formData.phone ? formData.phone.replace(/\D/g, '') : '';
+    
+    // Validation: Email OR Phone
+    if (!formData.email && !normalizedPhone) {
+        alert('Un courriel ou un numéro de téléphone est requis.');
+        return;
+    }
+
+    // Validation: Phone must be 10 digits if provided
+    if (normalizedPhone && normalizedPhone.length !== 10) {
+        alert('Le numéro de téléphone doit comporter exactement 10 chiffres (ex: 5146194333).');
+        return;
+    }
+
+    const finalFormData = { ...formData, phone: normalizedPhone };
+
     try {
       if (editingMember) {
-        const res = await api.put(`/members/members/${editingMember.id}/`, formData);
+        // Remove password if empty during edit
+        const payload = { ...finalFormData };
+        if (!payload.password) delete payload.password;
+        
+        const res = await api.put(`/members/members/${editingMember.id}/`, payload);
         setMembers(members.map(m => m.id === editingMember.id ? res.data : m));
       } else {
-        const res = await api.post('/members/members/', formData);
+        const res = await api.post('/members/members/', finalFormData);
         setMembers([...members, res.data]);
       }
       setShowModal(false);
     } catch (err: any) {
       console.error('Error saving member:', err);
-      alert(err.response?.data?.detail || 'Erreur lors de l\'enregistrement');
+      // Handle backend validation errors (like unique phone)
+      const errorData = err.response?.data;
+      if (errorData?.phone) {
+        alert(`Téléphone: ${errorData.phone[0]}`);
+      } else {
+        alert(errorData?.detail || 'Erreur lors de l\'enregistrement');
+      }
     }
   };
 
   const filteredMembers = members.filter(m =>
-    `${m.first_name} ${m.last_name} ${m.email}`.toLowerCase().includes(searchTerm.toLowerCase())
+    `${m.first_name} ${m.last_name} ${m.email} ${m.phone}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusColor = (status: string) => {
@@ -162,11 +185,6 @@ const MembersPage = () => {
   const formatDateForInput = (isoString: string) => {
     if (!isoString) return '';
     const date = new Date(isoString);
-    // Adjust to local time zone logic if needed, or just slice. 
-    // Simplest approach for ISO string from backend (which is usually UTC) to datetime-local:
-    // This is tricky with timezones. simplest is just substring if we accept UTC or local.
-    // Let's try to keep it simple: new Date(isoString).toISOString().slice(0, 16) gives UTC.
-    // For local input, we want local time.
     const pad = (n: number) => n < 10 ? '0' + n : n;
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   };
@@ -185,7 +203,7 @@ const MembersPage = () => {
       <div className="search-bar">
         <input
           type="text"
-          placeholder="Rechercher par nom ou email..."
+          placeholder="Rechercher par nom, email ou téléphone..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -197,7 +215,7 @@ const MembersPage = () => {
             <tr>
               <th>MEMBRE</th>
               <th>STATUT</th>
-              <th>TYPE</th>
+              <th>CODE POSTAL</th>
               <th>DATE D'ADHÉSION</th>
               <th>ACTIONS</th>
             </tr>
@@ -210,7 +228,6 @@ const MembersPage = () => {
             ) : (
               filteredMembers.map(member => (
                 <tr key={member.id} onClick={(e) => {
-                    // Prevent navigation if clicking on action buttons
                     if ((e.target as HTMLElement).closest('.action-buttons')) return;
                     navigate(`/members/${member.id}`);
                 }} className="cursor-pointer hover:bg-gray-50/5 transition-colors">
@@ -222,7 +239,7 @@ const MembersPage = () => {
                       <div>
                         <strong>{member.first_name} {member.last_name}</strong>
                         <div className="flex items-center gap-2">
-                          <small>{member.email}</small>
+                          <small>{member.email || member.phone || 'N/A'}</small>
                           {member.is_staff && (
                             <span className="inline-flex items-center gap-1 bg-purple-100 text-purple-700 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border border-purple-200">
                               <Shield size={10} /> Admin
@@ -237,7 +254,7 @@ const MembersPage = () => {
                       {getStatusLabel(member.status)}
                     </span>
                   </td>
-                  <td>{member.membership_type || '-'}</td>
+                  <td>{member.postal_code}</td>
                   <td>
                     {member.date_joined ? new Date(member.date_joined).toLocaleDateString('fr-CA') : '-'}
                   </td>
@@ -299,12 +316,11 @@ const MembersPage = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label>Courriel *</label>
+              <label>Courriel</label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
               />
             </div>
             <div className="form-group">
@@ -313,26 +329,28 @@ const MembersPage = () => {
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="514 619 4333"
               />
+              <small className="text-text-muted text-[10px]">Format: 10 chiffres (ex: 514-619-4333)</small>
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label>Nom d'utilisateur *</label>
+              <label>Code Postal *</label>
               <input
                 type="text"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                value={formData.postal_code}
+                onChange={(e) => setFormData({ ...formData, postal_code: e.target.value.toUpperCase() })}
                 required
-                disabled={!!editingMember}
+                placeholder="J6E 2A1"
               />
             </div>
             <div className="form-group">
-              <label>Genre</label>
+              <label>Sexe</label>
               <select
-                value={formData.gender}
-                onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                value={formData.sex}
+                onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
               >
                 <option value="M">Homme</option>
                 <option value="F">Femme</option>
@@ -347,19 +365,9 @@ const MembersPage = () => {
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
               >
-                <option value="PENDING">En attente</option>
                 <option value="ACTIVE">Actif</option>
                 <option value="INACTIVE">Inactif</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Type d'adhésion</label>
-              <select
-                value={formData.membership_type}
-                onChange={(e) => setFormData({ ...formData, membership_type: e.target.value })}
-              >
-                <option value="MONTHLY">Mensuel</option>
-                <option value="ANNUAL">Annuel</option>
+                <option value="PENDING">En attente</option>
               </select>
             </div>
           </div>
@@ -386,21 +394,37 @@ const MembersPage = () => {
                 <option value="false">Membre Standard</option>
                 <option value="true">Administrateur</option>
               </select>
-              <p className="text-xs text-gray-500 mt-1">
-                Les administrateurs ont accès à la gestion des ressources, des finances, et des autres membres.
-              </p>
             </div>
           )}
 
           {!editingMember && (
             <div className="form-group">
               <label>Mot de passe *</label>
-              <input
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                  className="flex-1"
+                  placeholder="Mot de passe temporaire"
+                />
+                <button
+                  type="button"
+                  className="btn btn-secondary px-3"
+                  onClick={() => {
+                    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+                    let pass = '';
+                    for (let i = 0; i < 12; i++) {
+                      pass += chars.charAt(Math.floor(Math.random() * chars.length));
+                    }
+                    setFormData({ ...formData, password: pass });
+                  }}
+                >
+                  Générer
+                </button>
+              </div>
+              <small className="text-text-muted text-[10px]">Le membre devra changer ce mot de passe à sa première connexion.</small>
             </div>
           )}
         </form>
